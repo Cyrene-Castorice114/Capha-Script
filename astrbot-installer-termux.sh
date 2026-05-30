@@ -80,8 +80,8 @@ astrbot_download(){
     proot-distro login astrbot -- bash -c '$HOME/.local/bin/uv venv'
     proot-distro login astrbot -- bash -c 'source .venv/bin/activate'
     #切换uv的下载方式为复制
-    echo -e "$blue 正在安装最新版本版本$green astrbot $color"
-    proot-distro login astrbot -- bash -c 'echo "export UV_LINK_MODE=copy" >> $HOME/.bashrc && $HOME/.local/bin/uv tool install astrbot'
+    echo -e "$blue 正在安装最稳定版本$green astrbot==4.22.2 $color"
+    proot-distro login astrbot -- bash -c 'echo "export UV_LINK_MODE=copy" >> $HOME/.bashrc && $HOME/.local/bin/uv tool install astrbot==4.22.2'
     echo -e "$blue 正在初始化astrbot...$color"
     if proot-distro login astrbot -- bash -c '$HOME/.local/bin/uv tool run astrbot init' ; then
         echo -e "$blue 初始化astrbot成功！$color"
