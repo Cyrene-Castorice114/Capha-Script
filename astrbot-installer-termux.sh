@@ -64,7 +64,7 @@ uv_install(){
     if [ -f "$HOME/.local/bin/uv" ];then
         echo -e "$blue uv已安装，跳过下载"
     else
-        curl -LsSf "https://raw.gitcode.com/Cyrene-Castorice/Capha-Script/raw/main/uv-installer-for-astrbot.sh" | sh
+        curl -LsSf "https://raw.gitcode.com/Cyrene-Castorice/Capha-Script/raw/main/uv-installer-for-astrbot-termux.sh" | sh
     fi'
     proot-distro login astrbot -- bash -c 'export PATH="$HOME/.local/bin:$PATH" >> $HOME/.bashrc'
     proot-distro login astrbot -- bash -c 'source $HOME/.bashrc'
