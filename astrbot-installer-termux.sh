@@ -40,7 +40,7 @@ check_package(){
         echo -e "$red 下载时出现错误！"
         exit 1
     fi
-    if pip install proot-distro >/dev/null 2>&1; then
+    if pip install proot-distro==5.0.0 >/dev/null 2>&1; then
         echo -e "$blue 你已成功下载了必要的资源包-proot-distro！"
     else
         echo -e "$red 下载时出现错误！"
