@@ -25,7 +25,7 @@ else {
 #check uv for running the bot
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     Write-Host "uv is not installed. Starting install uv."
-    pip install uv
+    pip install uv==0.10.1
 }
 else {
     Write-Host "uv is installed. Proceeding with installation."
