@@ -34,7 +34,8 @@ choose_download(){
      echo -e "在以下选项中$blue选择任意一个选项$color"
      echo -e "1.使用$blue 克隆资源包仓库 $color安装(官方，不推荐)"
      echo -e "2.使用$blue GitHub克隆 $color安装(官方仓库，推荐)"
-     echo -e "3.使用$blue 一键部署脚本 $color 安装(非官方，推荐)"
+     echo -e "3.使用$blue 一键部署脚本 $color安装(官方，推荐)"
+     echo -e "4.使用$blue 官方桌面版软件 $color安装(官方，推荐，Linux)"
      read -p ">" install_choice_ol
      case $install_choice_ol in
          1)
@@ -46,6 +47,9 @@ choose_download(){
          3)
              clear
              curl -fsSL https://res.oplist.org/script/v4.sh > install-openlist-v4.sh && bash install-openlist-v4.sh
+             ;;
+         4)
+             download_github_desktop
              ;;
      esac
 }
@@ -226,6 +230,67 @@ test_proxy() {
         echo -e "即将使用 $blue$best_proxy$color (延迟 $best_time) 来下载 openlist!"
     else
         echo -e "$red代理测试失败！没有可用的代理！$color"
+        exit 1
+    fi
+}
+
+choose_oldesktop_ver(){
+    mkdir -p "$HOME/Desktop"
+    while true
+    do
+        owner="OpenListTeam"
+        repo="OpenList-Desktop"
+        echo -e "请输入你要下载的Openlist桌面版本"
+        echo -e "输入$blue ver $color查看Openlist桌面版本的所有版本"
+        read -p ">" ol_version_desktop
+        ol_desktop_true_version="v$ol_version_desktop"
+        case $ol_desktop_true_version in
+            ver)
+                curl -s "https://api.github.com/repos/$owner/$repo/tags?per_page=100" | grep -o '"name": "[^"]*"'
+                echo -e "按下$blue回车$color回退"
+                read
+                clear
+                ;;
+            *)
+                sys_info=$(uname -m)
+                if [[ "$sys_info" == "aarch64" ]]; then
+                    sys_package="OpenList-Desktop_${ol_version_desktop}_arm64.deb"
+                elif [[ "$sys_info" == "x86_64" ]]; then
+                    sys_package="OpenList-Desktop_${ol_version_desktop}_amd64.deb"
+                fi
+                search_tag_desktop
+                break
+                ;;
+        esac
+    done
+}
+
+search_tag_desktop(){
+    owner="OpenListTeam"
+    repo="OpenList-Desktop"
+    tag="$ol_desktop_true_version"
+    if git ls-remote --tags "https://gh-proxy.com/https://github.com/$owner/$repo.git" | grep -q "refs/tags/$tag$"; then
+        echo -e "$green已找到$tag版本的Openlist桌面版本,即将开始下载...$color"
+    else
+        echo -e "$red未找到$tag版本的Openlist桌面版本!$color"
+        exit 1
+    fi
+}
+
+download_github_desktop(){
+    clear
+    choose_oldesktop_ver
+    download_ol_desktop
+}
+
+download_ol_desktop(){
+    test_proxy
+    echo -e "$blue 开始下载Openlist $ol_version版本！$color"
+    if curl -L -o "$HOME/Desktop/$sys_package" "$best_proxy/https://github.com/OpenListTeam/OpenList-Desktop/releases/download/$ol_desktop_true_version/$sys_package"; then
+        echo -e "$blue Openlist桌面版已成功下载！$color deb文件包存在于$green$HOME/Desktop$color"
+    else
+        echo -e "$red 下载时出现错误!$color"
+        rm -rf $TMP_DIR
         exit 1
     fi
 }
