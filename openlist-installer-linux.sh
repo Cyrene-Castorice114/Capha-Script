@@ -296,5 +296,6 @@ download_ol_desktop(){
 }
 
 color_variable
+check_permissions
 check_package
 choose_download
