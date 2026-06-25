@@ -36,6 +36,7 @@ choose_download(){
      echo -e "2.使用$blue GitHub克隆 $color安装(官方仓库，推荐)"
      echo -e "3.使用$blue 一键部署脚本 $color安装(官方，推荐)"
      echo -e "4.使用$blue 官方桌面版软件 $color安装(官方，推荐，Linux)"
+     echo -e "5.切换至${blue}TUI-CTL UI$color"
      read -p ">" install_choice_ol
      case $install_choice_ol in
          1)
@@ -51,6 +52,18 @@ choose_download(){
          4)
              download_github_desktop
              ;;
+         5)
+            clear
+            echo -e "$blue正在切换至TUI-CTL UI$color"
+            echo -ne "正在安装软件包$blue dialog $color \r"
+            if apt install -y dialog >/dev/null 2>&1;then
+                echo -ne "${blue}dialog${green}软件包安装成功！$color \r"
+            else
+                echo -ne "${blue}dialog${red}软件包安装失败！$color \r"
+                exit 1
+            fi
+            tui-ctl-install
+            ;;
      esac
 }
 
@@ -295,7 +308,39 @@ download_ol_desktop(){
     fi
 }
 
+tui-ctl-install(){
+    install-ol-tui=$(dialog --title "OpenList安装程序" \
+    --menu "请选择安装方式" 0 0 10 \
+    001 "使用APT安装" \
+    002 "使用GitHub克隆安装" \
+    003 "使用一键部署脚本安装" \
+    004 "使用官方桌面版软件安装" \
+    005 "退出安装程序" \
+    3&>2 2&>1 1>&2 2>/dev/tty)
+    case $install-ol-tui in
+        001)
+            download_apt
+            ;;
+        002)
+            download_apt
+            ;;
+        003)
+            download_github
+            ;;
+        004)
+            clear
+            curl -fsSL https://res.oplist.org/script/v4.sh > install-openlist-v4.sh && bash install-openlist-v4.sh
+            ;;
+        005)
+            download_github_desktop
+            ;;
+        006)
+            clear
+            exit 0
+            ;;
+    esac
+}
+
 color_variable
-check_permissions
 check_package
 choose_download
