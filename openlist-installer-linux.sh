@@ -11,6 +11,25 @@ color_variable() {
     cyan='\033[96m'
 }
 
+check_system_package(){
+    if command -v apt >/dev/null 2>&1; then
+        system_install="apt install"
+        system="Ubuntu/Debian"
+    elif command -v pacman >/dev/null 2>&1; then
+        system_install="pacman -S"
+        system="Arch Linux"
+    elif command -v yum >/dev/null 2>&1; then
+        system_install="yum install"
+        system="CentOS/RHEL"
+    elif command -v dnf >/dev/null 2>&1; then
+        system_install="dnf install"
+        system="Fedora"
+    else
+        echo -e "$red 未检测到支持的包管理器，请手动安装所需依赖项。$color"
+        exit 1
+    fi
+}
+
 check_permissions(){
     if [ "$EUID" -ne 0 ]; then
         echo -e "$red Please run this script as root. $color"
@@ -19,11 +38,13 @@ check_permissions(){
 }
 
 check_package(){
+    echo -e "$grey 当前系统: $system $color"
+    echo -ne "$grey 检查所需软件包... $color \r"
     package=( "gum" "curl" "unzip" "git" "tar" )
     for pkg in "${package[@]}"; do
         if ! command -v "$pkg" &> /dev/null; then
             echo -ne "$grey $pkg安装失败！重试... $color \r"
-            apt install -y $pkg >/dev/null 2>&1
+            $system_install $pkg -y >/dev/null 2>&1
         else
             echo -ne "$grey $pkg已安装！ $color \r"
         fi
@@ -47,7 +68,7 @@ choose_download(){
              ;;
          3)
              clear
-             curl -fsSL https://res.oplist.org/script/v4.sh > install-openlist-v4.sh && bash install-openlist-v4.sh
+             curl -fsSL https://res.oplist.org/script/v4.sh > install-openlist-v4.sh && bash install-openlist-v4.sh && rm -rf install-openlist-v4.sh
              ;;
          4)
              download_github_desktop
@@ -55,14 +76,18 @@ choose_download(){
          5)
             clear
             echo -e "$blue正在切换至TUI-CTL UI$color"
-            echo -ne "正在安装软件包$blue dialog $color \r"
-            if apt install -y dialog >/dev/null 2>&1;then
-                echo -ne "${blue}dialog${green}软件包安装成功！$color \r"
+            if command -v dialog >/dev/null 2>&1; then
+                tui_ctl_install
             else
-                echo -ne "${blue}dialog${red}软件包安装失败！$color \r"
-                exit 1
+                echo -ne "正在安装软件包$blue dialog $color \r"
+                if $system_install dialog -y >/dev/null 2>&1; then
+                    echo -ne "${blue}dialog${green}软件包安装成功！$color \r"
+                else
+                    echo -ne "${blue}dialog${red}软件包安装失败！$color \r"
+                    exit 1
+                fi
+                tui_ctl_install
             fi
-            tui-ctl-install
             ;;
      esac
 }
@@ -76,7 +101,7 @@ download_apt(){
             echo -e "$blue[*]正在安装并自动设置 GPG 密钥 $color"
             curl -fsSL "$best_proxy/https://github.com/OpenListTeam/OpenList-APT/releases/latest/download/install-apt.sh" | bash
             echo -e "$blue[*]正在安装Openlist $color"
-            if apt install -y openlist >/dev/null 2>&1;then
+            if $system_install openlist -y >/dev/null 2>&1;then
                 echo -e "$green[*]Openlist成功安装！ $color"
                 exit 0
             else
@@ -91,7 +116,7 @@ download_apt(){
             echo -e "$blue[*]正在更新 APT 资源包... $color"
             gum spin --spinner line --title "Updating APT resources..." -- apt update
             echo -e "$blue[*]正在安装Openlist $color"
-            if apt install -y openlist >/dev/null 2>&1;then
+            if $system_install openlist -y >/dev/null 2>&1;then
                 echo -e "$green[*]Openlist成功安装！ $color"
                 exit 0
             else
@@ -308,33 +333,30 @@ download_ol_desktop(){
     fi
 }
 
-tui-ctl-install(){
-    install-ol-tui=$(dialog --title "OpenList安装程序" \
+tui_ctl_install(){
+    install_ol_tui=$(dialog --title "OpenList安装程序" \
     --menu "请选择安装方式" 0 0 10 \
-    001 "使用APT安装" \
-    002 "使用GitHub克隆安装" \
-    003 "使用一键部署脚本安装" \
-    004 "使用官方桌面版软件安装" \
-    005 "退出安装程序" \
-    3&>2 2&>1 1>&2 2>/dev/tty)
-    case $install-ol-tui in
-        001)
+    1 "使用APT安装" \
+    2 "使用GitHub克隆安装" \
+    3 "使用一键部署脚本安装" \
+    4 "使用官方桌面版软件安装" \
+    5 "退出安装程序" \
+    2>&1 >/dev/tty)
+    case "$install_ol_tui" in
+        1)
             download_apt
             ;;
-        002)
-            download_apt
-            ;;
-        003)
+        2)
             download_github
             ;;
-        004)
+        3)
             clear
             curl -fsSL https://res.oplist.org/script/v4.sh > install-openlist-v4.sh && bash install-openlist-v4.sh
             ;;
-        005)
+        4)
             download_github_desktop
             ;;
-        006)
+        5)
             clear
             exit 0
             ;;
@@ -342,5 +364,6 @@ tui-ctl-install(){
 }
 
 color_variable
+check_system_package
 check_package
 choose_download
