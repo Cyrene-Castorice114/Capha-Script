@@ -8,8 +8,30 @@ yellow='\033[1;33m'
 color='\033[0m'
 }
 
+check_system_package(){
+    if command -v pkg >/dev/null 2>&1; then
+        system_install="apt install"
+        system="Termux"
+    elif command -v apt >/dev/null 2>&1; then
+        system_install="apt install"
+        system="Debian/Ubuntu"
+    elif command -v pacman >/dev/null 2>&1; then
+        system_install="pacman -S"
+        system="Arch Linux"
+    elif command -v yum >/dev/null 2>&1; then
+        system_install="yum install"
+        system="CentOS/RHEL"
+    elif command -v dnf >/dev/null 2>&1; then
+        system_install="dnf install"
+        system="Fedora"
+    else
+        echo -e "$red 未检测到支持的包管理器，请手动安装所需依赖项。$color"
+        exit 1
+    fi
+}
 
 check_package(){
+    echo -e "$blue 检测到系统为 $system$color"
     echo -ne "$grey正在检查必要的资源包$color \r"
     package=( "curl" "mkdir" "cp" "chmod" "mktemp" "rm" "tar" )
     for pkg in ${package[@]};do
@@ -17,7 +39,7 @@ check_package(){
             echo -ne "$grey检查到$pkg!已跳过安装... \r"
         else
             echo -ne "$grey缺失$pkg!即将安装... \r"
-            apt install -y $pkg >/dev/null 2&>1
+            $system_install $pkg -y >/dev/null 2>&1
         fi
     done
 }
@@ -173,6 +195,7 @@ end(){
 }
 
 color
+check_system_package
 check_package
 check_sys
 create_install_path

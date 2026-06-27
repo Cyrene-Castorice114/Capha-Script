@@ -22,7 +22,30 @@ check_dir(){
     done
 }
 
+check_system_package(){
+    if command -v pkg >/dev/null 2>&1; then
+        system_install="apt install"
+        system="Termux"
+    elif command -v apt >/dev/null 2>&1; then
+        system_install="apt install"
+        system="Ubuntu/Debian"
+    elif command -v pacman >/dev/null 2>&1; then
+        system_install="pacman -S"
+        system="Arch Linux"
+    elif command -v yum >/dev/null 2>&1; then
+        system_install="yum install"
+        system="CentOS/RHEL"
+    elif command -v dnf >/dev/null 2>&1; then
+        system_install="dnf install"
+        system="Fedora"
+    else
+        echo -e "$red 未检测到支持的包管理器，请手动安装所需依赖项。$color"
+        exit 1
+    fi
+}
+
 check_mainly_package(){
+    echo -e "$blue 检测到系统为 $system$color"
     echo -ne " $grey检查必要的资源包...   Check the necessary resource packages... \r"
     sleep 1
     PACKAGE=( "curl" "wget" "chafa" "whiptail" )
@@ -33,7 +56,7 @@ check_mainly_package(){
         else
             echo -ne " $grey未检查到 $package 资源包，开始安装 $package ...   Not checked $package resource pack, starting installation $package... \r"
             sleep 0.5
-            if apt install -y $package >/dev/null 2>&1;then
+            if $system_install $package -y >/dev/null 2>&1;then
                 echo -ne " $grey$package 资源包安装成功!    $package resource package installed successfully!"
                 sleep 0.8
             else
@@ -170,7 +193,8 @@ color_variable() {
     cyan='\033[96m'
 }
 
-check_dir
 color_variable
+check_dir
+check_system_package
 check_mainly_package
 choose_devices
