@@ -33,6 +33,7 @@ download_openlist(){
     echo -e "1.使用${blue}apt软件包$color下载"
     echo -e "2.使用${blue}GitHub克隆$color下载"
     echo -e "3.使用${blue}一键安装脚本$color下载"
+    echo -e "4.切换至${green}TUI-CTL UI$color安装"
     read -p ">" download_openlist_choice
     case $download_openlist_choice in
         1)
@@ -47,6 +48,10 @@ download_openlist(){
         3)
             clear
             curl -fsSL https://res.oplist.org/script/v4.sh > install-openlist-v4.sh && bash install-openlist-v4.sh && rm -rf install-openlist-v4.sh
+            ;;
+        4)
+            clear
+            tui-ctl-ui
             ;;
     esac
 }
@@ -228,6 +233,51 @@ test_proxy() {
         echo -e "$red代理测试失败！没有可用的代理！$color"
         exit 1
     fi
+}
+
+tui-ctl-ui(){
+    clear
+    echo -e "正在切换至${green}TUI-CTL UI$color"
+    if command -v dialog >/dev/null 2&>1;then
+        if apt install dialog >/dev/null 2&>1;then
+            echo -e "${green}TUI-CTL UI$color安装成功!"
+        else
+            echo -e "${red}TUI-CTL UI$color安装失败!请检查网络状态/apt(pkg)软件包状态"
+        fi
+    else
+        echo -e "${green}TUI-CTL UI$color已安装!"
+    fi
+    install-tui-ui=$(dialog --title "OpenList安装程序" \
+    --menu "请选择安装方式" 0 0 0 \
+    1 "使用apt软件包安装" \
+    2 "使用GitHub克隆安装" \
+    3 "使用一键安装脚本安装" \
+    2>&1 >/dev/tty)
+    case $install-tui-ui in
+        1)
+            clear
+            package_install
+            ;;
+        2)
+            clear
+            install_github
+            echo -e "使用${pink}./openlist help$color即可查看帮助界面!"
+            ;;
+        3)
+            clear
+            curl -fsSL https://res.oplist.org/script/v4.sh > install-openlist-v4.sh && bash install-openlist-v4.sh && rm -rf install-openlist-v4.sh
+            ;;
+        225)
+            clear
+            echo -e "已退出安装程序"
+            exit 0
+            ;;
+        0)
+            clear
+            echo -e "已退出安装程序"
+            exit 0
+            ;;
+    esac
 }
 
 color_variable
